@@ -1,0 +1,12 @@
+{
+  "functions": {
+    "api/generate.js": {
+      "memory": 3008,
+      "maxDuration": 60
+    },
+    "api/evaluate.js": {
+      "memory": 3008,
+      "maxDuration": 60
+    }
+  }
+}
