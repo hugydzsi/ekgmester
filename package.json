@@ -1,0 +1,9 @@
+{
+  "type": "module",
+  "name": "ekgmester",
+  "version": "1.0.0",
+  "description": "EKG Quiz with AI",
+  "scripts": {
+    "dev": "vercel dev"
+  }
+}
