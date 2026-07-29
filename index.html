@@ -203,4 +203,455 @@
 
         .submit-btn {
             background: #378ADD !important;
-            color: white
+            color: white !important;
+            border-color: #378ADD !important;
+        }
+
+        .submit-btn:hover {
+            background: #2669b8 !important;
+            border-color: #2669b8 !important;
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .result {
+            display: none;
+            background: #f9f9f6;
+            border: 0.5px solid #e0e0d0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .result.active {
+            display: block;
+        }
+
+        .result-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .result-icon {
+            font-size: 24px;
+        }
+
+        .result-icon.correct {
+            color: #639922;
+        }
+
+        .result-icon.partial {
+            color: #BA7517;
+        }
+
+        .result-icon.incorrect {
+            color: #993C1D;
+        }
+
+        .result h4 {
+            font-size: 16px;
+            font-weight: 500;
+            margin: 0;
+        }
+
+        .result-text {
+            font-size: 14px;
+            line-height: 1.6;
+            color: #000;
+            margin-bottom: 12px;
+        }
+
+        .points {
+            display: inline-block;
+            background: #378ADD;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            border: 0.5px solid #e0e0d0;
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 20px;
+            font-weight: 500;
+            color: #378ADD;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 4px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 32px;
+            color: #666;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #e0e0d0;
+            border-top-color: #378ADD;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-right: 12px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .welcome {
+            text-align: center;
+            margin: 32px 0;
+        }
+
+        .welcome p {
+            font-size: 15px;
+            line-height: 1.6;
+            color: #666;
+            margin-bottom: 12px;
+        }
+
+        .error-message {
+            background: #f5e5e5;
+            color: #993C1D;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🫀 EKG Mester</h1>
+            <p>AI-vezérelt interaktív tanulás</p>
+        </div>
+
+        <div id="welcome" class="welcome">
+            <p><strong>Válaszd ki a nehézségi szintet és kezdd meg a kvízt!</strong></p>
+            <p>Az AI valós EKG szituációkat generál számodra.</p>
+        </div>
+
+        <div class="level-select" id="levelSelect">
+            <button class="level-btn" data-level="1">🟢 Kezdő</button>
+            <button class="level-btn" data-level="2">🟡 Közepes</button>
+            <button class="level-btn" data-level="3">🔴 Haladó</button>
+        </div>
+
+        <div class="quiz-container" id="quizContainer">
+            <div class="progress">
+                <span id="questionNum">Kérdés 1/5</span>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <span id="scoreDisplay">Pontok: 0</span>
+            </div>
+
+            <div id="errorMessage" class="error-message" style="display:none;"></div>
+
+            <div id="loadingMsg" class="loading" style="display:none;">
+                <div class="spinner"></div>
+                <span>AI generálja a szituációt...</span>
+            </div>
+
+            <div id="situationDiv" class="situation" style="display:none;">
+                <h3>Klinikai szituáció</h3>
+                <div class="situation-text" id="situationText"></div>
+                <div style="margin-top: 16px; padding-top: 16px; border-top: 0.5px solid #e0e0d0;">
+                    <div style="font-size: 12px; color: #666; margin-bottom: 8px;">EKG leírása:</div>
+                    <div class="ekg-display" id="ekgDisplay"></div>
+                </div>
+            </div>
+
+            <div id="resultDiv" class="result">
+                <div class="result-header">
+                    <span class="result-icon" id="resultIcon">✓</span>
+                    <h4 id="resultTitle">Helyes!</h4>
+                </div>
+                <div class="result-text" id="resultText"></div>
+                <div id="scorePoints" class="points" style="display:none;"></div>
+            </div>
+
+            <div id="inputDiv" style="display:none;">
+                <div class="input-group">
+                    <label>Mi a diagnózis? Milyen kezelést javassolnál?</label>
+                    <textarea id="answerInput" placeholder="Írd le a diagnózisodat és a javasolt kezelést..."></textarea>
+                </div>
+
+                <div class="button-group">
+                    <button class="submit-btn" id="submitBtn" onclick="submitAnswer()">Válasz beküldése</button>
+                    <button onclick="skipQuestion()">Következő</button>
+                </div>
+            </div>
+
+            <div class="stats" id="statsDiv" style="display:none;">
+                <div class="stat-card">
+                    <div class="stat-value" id="totalScore">0</div>
+                    <div class="stat-label">Összesen</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="correctCount">0</div>
+                    <div class="stat-label">Helyes</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="accuracy">0%</div>
+                    <div class="stat-label">Sikeresség</div>
+                </div>
+            </div>
+
+            <div id="endDiv" style="display:none; text-align: center; margin-top: 20px;">
+                <h3 style="margin-bottom: 12px;">Kvíz vége!</h3>
+                <button onclick="restart()" style="margin-top: 12px; width: 200px; margin-left: auto; margin-right: auto; display: block;">Újra kezdés</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentLevel = null;
+        let questionCount = 0;
+        let totalScore = 0;
+        let correctAnswers = 0;
+        let currentQuestion = null;
+        let isSubmitting = false;
+
+        document.querySelectorAll('.level-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.level-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentLevel = btn.dataset.level;
+                startQuiz();
+            });
+        });
+
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            setTimeout(() => {
+                errorDiv.style.display = 'none';
+            }, 5000);
+        }
+
+        async function generateQuestion() {
+            const levelNames = { 1: 'kezdő', 2: 'közepes', 3: 'haladó' };
+            const levelDesc = {
+                1: 'egyszerű ritmusok (sínus ritmus, atrioventrikuláris blokk, szupraventrikuláris ritmusok)',
+                2: 'szívizom-iszkémia, infarktus jelek, elektrolit zavarok',
+                3: 'komplexebb diagnosztikai helyzetek, kombinált patológiák'
+            };
+
+            const prompt = `Generálj egy orvostudományi szituációt MAGYAR NYELVEN egy ${levelNames[currentLevel]} szintű EKG diagnosztikai esethez.
+
+A nehézségi szint: ${levelDesc[currentLevel]}
+
+Válasz formátum JSON-ben, pontosan ezzel a szerkezettel:
+{
+  "situation": "Beteg leírása: kor, nem, tünetek, vitális paraméterek. Rövid, 2-3 mondat.",
+  "ekg_description": "Az EKG leírása magyar nyelvű szöveggel. Mutasd meg a specifikus EKG eltéréseket.",
+  "correct_diagnosis": "A helyes diagnózis rövid magyar szövegben",
+  "explanation": "Miért ez a helyes válasz? Milyen EKG jelek vezetnek ehhez? 2-3 mondat magyarázat.",
+  "treatment": "Ajánlott kezelés és teendők röviden"
+}
+
+Válaszold csak JSON-t, semmi más szöveget!`;
+
+            try {
+                const response = await fetch("/api/generate", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ prompt })
+                });
+
+                const data = await response.json();
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                return data;
+            } catch (err) {
+                console.error('API hiba:', err);
+                showError('Hiba az EKG generálásában. Próbáld újra!');
+                return null;
+            }
+        }
+
+        async function startQuiz() {
+            document.getElementById('welcome').style.display = 'none';
+            document.getElementById('levelSelect').style.display = 'none';
+            document.getElementById('quizContainer').classList.add('active');
+            questionCount = 0;
+            totalScore = 0;
+            correctAnswers = 0;
+            loadNextQuestion();
+        }
+
+        async function loadNextQuestion() {
+            questionCount++;
+            if (questionCount > 5) {
+                showResults();
+                return;
+            }
+
+            document.getElementById('questionNum').textContent = `Kérdés ${questionCount}/5`;
+            document.getElementById('progressFill').style.width = `${(questionCount / 5) * 100}%`;
+            document.getElementById('loadingMsg').style.display = 'block';
+            document.getElementById('situationDiv').style.display = 'none';
+            document.getElementById('resultDiv').classList.remove('active');
+            document.getElementById('inputDiv').style.display = 'none';
+            document.getElementById('answerInput').value = '';
+
+            currentQuestion = await generateQuestion();
+            if (!currentQuestion) {
+                return;
+            }
+
+            setTimeout(() => {
+                document.getElementById('loadingMsg').style.display = 'none';
+                document.getElementById('situationDiv').style.display = 'block';
+                document.getElementById('situationText').textContent = currentQuestion.situation;
+                document.getElementById('ekgDisplay').textContent = currentQuestion.ekg_description;
+                document.getElementById('inputDiv').style.display = 'block';
+                document.getElementById('answerInput').focus();
+            }, 500);
+        }
+
+        async function submitAnswer() {
+            if (isSubmitting) return;
+            isSubmitting = true;
+
+            const answer = document.getElementById('answerInput').value.trim();
+            if (!answer) {
+                alert('Kérlek írj be egy választ!');
+                isSubmitting = false;
+                return;
+            }
+
+            document.getElementById('submitBtn').disabled = true;
+            document.getElementById('loadingMsg').style.display = 'block';
+
+            const evaluationPrompt = `Egy mentőtiszt hallgató ezt a választ adta egy EKG kvíz kérdésre. Értékeld a válaszát!
+
+Helyes diagnózis és kezelés volt: ${currentQuestion.correct_diagnosis} / ${currentQuestion.treatment}
+
+A hallgató válasza: "${answer}"
+
+Választ ad JSON formátumban:
+{
+  "is_correct": true/false,
+  "points": 0-10,
+  "feedback": "Részletes visszajelzés magyar nyelvű, 2-3 mondat"
+}
+
+Csak JSON-t válaszolj!`;
+
+            try {
+                const response = await fetch("/api/evaluate", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ prompt: evaluationPrompt })
+                });
+
+                const data = await response.json();
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                const evaluation = data;
+                const points = Math.round(evaluation.points);
+                totalScore += points;
+                if (evaluation.is_correct) correctAnswers++;
+
+                document.getElementById('loadingMsg').style.display = 'none';
+                document.getElementById('inputDiv').style.display = 'none';
+                document.getElementById('resultDiv').classList.add('active');
+
+                const resultDiv = document.getElementById('resultDiv');
+                const resultIcon = document.getElementById('resultIcon');
+                const resultTitle = document.getElementById('resultTitle');
+                const resultText = document.getElementById('resultText');
+                const scorePoints = document.getElementById('scorePoints');
+
+                if (evaluation.is_correct) {
+                    resultIcon.textContent = '✓';
+                    resultIcon.className = 'result-icon correct';
+                    resultTitle.textContent = 'Helyes válasz!';
+                } else if (points > 5) {
+                    resultIcon.textContent = '⚠';
+                    resultIcon.className = 'result-icon partial';
+                    resultTitle.textContent = 'Részben helyes';
+                } else {
+                    resultIcon.textContent = '✗';
+                    resultIcon.className = 'result-icon incorrect';
+                    resultTitle.textContent = 'Nem teljesen jó';
+                }
+
+                resultText.innerHTML = `<strong>Visszajelzés:</strong> ${evaluation.feedback}<br><br><strong>Helyes megoldás:</strong> ${currentQuestion.explanation}`;
+                scorePoints.textContent = `+${points} pont`;
+                scorePoints.style.display = 'inline-block';
+
+                document.getElementById('scoreDisplay').textContent = `Pontok: ${totalScore}`;
+
+                setTimeout(() => {
+                    loadNextQuestion();
+                    isSubmitting = false;
+                }, 3000);
+
+            } catch (err) {
+                console.error('Értékelési hiba:', err);
+                showError('Hiba az értékelésben. Próbáld újra!');
+                isSubmitting = false;
+            }
+        }
+
+        function skipQuestion() {
+            loadNextQuestion();
+        }
+
+        function showResults() {
+            document.getElementById('inputDiv').style.display = 'none';
+            document.getElementById('situationDiv').style.display = 'none';
+            document.getElementById('resultDiv').classList.remove('active');
+            document.getElementById('loadingMsg').style.display = 'none';
+            document.getElementById('statsDiv').style.display = 'grid';
+            document.getElementById('endDiv').style.display = 'block';
+
+            document.getElementById('totalScore').textContent = totalScore;
+            document.getElementById('correctCount').textContent = correctAnswers;
+            document.getElementById('accuracy').textContent = Math.round((correctAnswers / 5) * 100) + '%';
+        }
+
+        function restart() {
+            location.reload();
+        }
+    </script>
+</body>
+</html>
